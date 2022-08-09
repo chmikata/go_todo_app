@@ -13,7 +13,7 @@ import (
 
 func main() {
 	if len(os.Args) != 2 {
-		log.Printf("need port number\n")
+		log.Printf("need port number!\n")
 		os.Exit(1)
 	}
 	p := os.Args[1]
