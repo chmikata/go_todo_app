@@ -1,0 +1,11 @@
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+name: test
+jobs:
+  test:
+    run-as: ubuntu-latest
+    
+    
