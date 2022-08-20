@@ -12,6 +12,7 @@ jobs:
         with:
           go-version: '>=1.19'
       - uses: actions/checkout@v3
-      - run: go test ./... -coverprofile=coverage.out
+      - name: Run tests with coverage report output
+        run: go test ./... -coverprofile=coverage.out
       - name: create report
         uses: k1LoW/octocov-action@v0
