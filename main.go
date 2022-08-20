@@ -46,7 +46,7 @@ func run(ctx context.Context, l net.Listener) error {
 
 	<-ctx.Done()
 	if err := s.Shutdown(context.Background()); err != nil {
-		log.Printf("failed to shutdown: %+v", err)
+		log.Printf("failed to shutdown: %+v!", err)
 	}
 
 	return eg.Wait()
