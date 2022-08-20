@@ -13,6 +13,7 @@ comment:
   if: is_pull_request
 report:
   datastores:
+    - is_default_branch
     - artifact://${GITHUB_REPOSITORY}
 diff:
   datastores:
