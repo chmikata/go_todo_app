@@ -11,3 +11,6 @@ testExecutionTime:
   if: true
 comment:
   if: is_pull_request
+diff:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
