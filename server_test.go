@@ -12,16 +12,21 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func TestRun(t *testing.T) {
+func TestServer_Run(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	eg, ctx := errgroup.WithContext(ctx)
+
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("failed to listen port %v", err)
 	}
+	mux := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return run(ctx, l)
+		s := NewServer(l, mux)
+		return s.Run(ctx)
 	})
 	time.Sleep(1 * time.Second)
 	in := "message"
