@@ -23,7 +23,9 @@ jobs:
         with:
           payload: |
             {
+              "author": ${{ github.event.sender.login }}
               "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-              "test": "test!!"}
+              "repo_name": "${{ github.event.repository.full_name }}"
+              "status": "${{ job.status }}"}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WORKFLOW_WEBHOOK_URL }}
