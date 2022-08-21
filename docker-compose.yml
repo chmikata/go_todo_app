@@ -1,11 +1,14 @@
 version: "3.9"
 services:
   app:
-    image: gotodo
+    image: gotodo-air
     build:
       args:
         - target=dev
+    environment:
+      TODO_ENV: dev
+      PORT: 8080
     volumes:
       - .:/app
     ports:
-      - "18080:80"
+      - "18080:8080"
