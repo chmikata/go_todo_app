@@ -5,7 +5,8 @@ on:
       - "main"
   pull_request:
 jobs:
-  unit-test:
+  pullreq-ci:
+    name: golang-unit-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
@@ -16,3 +17,11 @@ jobs:
         run: go test ./... -coverprofile=coverage.out
       - name: create report
         uses: k1LoW/octocov-action@v0
+      - name: Notify slack when job failed
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {"url:" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
