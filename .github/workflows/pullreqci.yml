@@ -23,7 +23,7 @@ jobs:
         with:
           payload: |
             {
-              "workflow_name": "${{ name }}",
+              "job_id": "${{ github.job }}",
               "author": "${{ github.event.sender.login }}",
               "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
               "repo_name": "${{ github.event.repository.full_name }}",
