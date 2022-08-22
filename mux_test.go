@@ -24,7 +24,7 @@ func TestNewMux(t *testing.T) {
 		t.Fatalf("failed to read body: %v", err)
 	}
 
-	want := `{"status": "ok"}`
+	want := `{"status": "ok", "path": "health"}`
 	if string(got) != want {
 		t.Errorf("want %q, but got %q", want, got)
 	}
