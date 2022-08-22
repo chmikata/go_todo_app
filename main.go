@@ -33,5 +33,4 @@ func run(ctx context.Context) error {
 	mux := NewMux()
 	s := NewServer(l, mux)
 	return s.Run(ctx)
-
 }
