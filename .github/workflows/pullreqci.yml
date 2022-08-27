@@ -26,10 +26,10 @@ jobs:
           go-version: '>=1.19'
       - uses: actions/checkout@v3
       - name: Create DB/ROLE/SCHEMA
-        run: 
+        run: | 
           apt-get update
           apt-get install --yes --no-install-recommends postgresql-client
-          psql -U postgres -W postgres -h localhost -p 5432 -f ./_tools/postgres/init/init.sql
+          psql -U postgres -h localhost -p 5432 -f ./_tools/postgres/init/init.sql
       - name: Create todoapp schema
         run: |
           go install github.com/k0kubun/sqldef/cmd/psqldef@latest
