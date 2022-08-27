@@ -1,16 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/chmikata/go_todo_app/handler"
+	"github.com/chmikata/go_todo_app/store"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator"
 )
 
 func NewMux() http.Handler {
-	mux := http.NewServeMux()
+	mux := chi.NewRouter()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		rMsg := fmt.Sprintf(`{"status": "ok", "path": "%s"}`, r.URL.Path[1:])
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		_, _ = w.Write([]byte(rMsg))
+		_, _ = w.Write([]byte(`{"status": "ok"}`))
 	})
+
+	v := validator.New()
+	at := &handler.AddTask{Store: store.Tasks, Validator: v}
+	mux.Post("/tasks", at.ServedHTTP)
+	lt := &handler.ListTask{Store: store.Tasks}
+	mux.Get("/tasks", lt.ServedHTTP)
 	return mux
 }
