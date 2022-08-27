@@ -29,7 +29,7 @@ jobs:
         run: | 
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql-client
-          psql -U postgres -h localhost -p 5432 -f ./_tools/postgres/init/init.sql
+          PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -f ./_tools/postgres/init/init.sql
       - name: Create todoapp schema
         run: |
           go install github.com/k0kubun/sqldef/cmd/psqldef@latest
