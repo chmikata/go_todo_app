@@ -23,6 +23,12 @@ ps: ## Check container status
 test: ## Execute tests
 	go test -race -shuffle=on ./...
 
+migrate: ## Migration DB
+	psqldef -U todo -W todo -h localhost -p 5432 todo -f ./_tools/postgres/schema.sql
+
+dry-migrate: ## Dry-run Migration DB
+	psqldef -U todo -W todo -h localhost -p 5432 todo --dry-run -f ./_tools/postgres/schema.sql
+
 help: ## Show options
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
