@@ -27,7 +27,7 @@ func (r *Repository) AddTask(
 	t.Modified = r.Clocker.Now()
 	sql := `insert into tasks
 		(title, stat, created, modified)
-		values(?, ?, ?, ?);`
+		values($1, $2, $3, $4) returning id;`
 	err := db.QueryRowxContext(
 		ctx, sql, t.Title, t.Stat,
 		t.Created, t.Modified,
