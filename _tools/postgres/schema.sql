@@ -1,5 +1,5 @@
 create table todoapp.users (
-    id          integer primary key,
+    id          serial primary key,
     name        text not null unique,
     password    text not null,
     role        text not null,
@@ -15,7 +15,7 @@ comment on column todoapp.users.created is   'レコード作成日時';
 comment on column todoapp.users.modified is  'レコード更新日時';
 
 create table todoapp.tasks (
-    id          integer primary key,
+    id          serial primary key,
     title       text not null,
     stat        text not null,
     created     timestamp not null,
