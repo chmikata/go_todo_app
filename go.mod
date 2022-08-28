@@ -9,6 +9,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/go-cmp v0.5.8
+	github.com/jmoiron/sqlx v1.3.5
+	github.com/lib/pq v1.10.6
 )
 
 require (
