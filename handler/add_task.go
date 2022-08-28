@@ -37,7 +37,7 @@ func (at *AddTask) ServedHTTP(w http.ResponseWriter, r *http.Request) {
 
 	t := &entity.Task{
 		Title:   b.Title,
-		Status:  entity.TaskStatusTodo,
+		Stat:    entity.TaskStatusTodo,
 		Created: time.Now(),
 	}
 
