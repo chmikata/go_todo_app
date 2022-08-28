@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chmikata/go_todo_app/clock"
 	"github.com/chmikata/go_todo_app/config"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -14,7 +15,7 @@ import (
 func New(ctx context.Context, cfg *config.Config) (*sqlx.DB, func(), error) {
 	db, err := sql.Open("postgres",
 		fmt.Sprintf(
-			"host=%s port=%s dbname=%s user=%s password=%s",
+			"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 			cfg.DBHost, cfg.DBPort,
 			cfg.DBName, cfg.DBUser,
 			cfg.DBPassword,
@@ -44,9 +45,26 @@ type Preparer interface {
 
 type Execer interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	NamedExecContext(ctx context.Context, query string, arg interface{})
+	NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error)
+	QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row
 }
 
 type Queryer interface {
-	QueryContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+	Preparer
+	QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+	QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row
+	GetContext(ctx context.Context, dest interface{}, query string, args ...any) error
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...any) error
+}
+
+var (
+	_ Beginner = (*sqlx.DB)(nil)
+	_ Preparer = (*sqlx.DB)(nil)
+	_ Queryer  = (*sqlx.DB)(nil)
+	_ Execer   = (*sqlx.DB)(nil)
+	_ Execer   = (*sqlx.Tx)(nil)
+)
+
+type Repository struct {
+	Clocker clock.Clocker
 }
