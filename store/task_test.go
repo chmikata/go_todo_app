@@ -62,9 +62,9 @@ func TestRepository_ListTasks(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	// initialize test case
+	// initialize test case. test record delete
 	if _, err := tx.ExecContext(ctx, "delete from todoapp.tasks;"); err != nil {
-		t.Errorf("failed to initialize tasks: %v", err)
+		t.Errorf("failed to initialize todoapp.tasks: %v", err)
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,7 +91,8 @@ func TestRepository_ListTasks(t *testing.T) {
 				t.Errorf("Repository.ListTasks() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			// PostgreSQLのtimestampとのズレを解消
+
+			// Eliminate discrepancies with PostgreSQL timestamp
 			for _, g := range got {
 				g.Created = g.Created.UTC()
 				g.Modified = g.Modified.UTC()
@@ -149,7 +150,7 @@ func TestRepository_AddTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock.ExpectQuery(
-				regexp.QuoteMeta(`insert into tasks (title, stat, created, modified)
+				regexp.QuoteMeta(`insert into todoapp.tasks (title, stat, created, modified)
 				values($1, $2, $3, $4) returning id;`),
 			).WithArgs(tt.args.t.Title, tt.args.t.Stat, tt.args.t.Created, tt.args.t.Modified).
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(wantID))

@@ -29,6 +29,9 @@ migrate: ## Migration DB
 dry-migrate: ## Dry-run Migration DB
 	psqldef -U todo -W todo -h localhost -p 5432 todo --dry-run -f ./_tools/postgres/schema.sql
 
+generate: ## Generate codes
+	go generate ./...
+
 help: ## Show options
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

@@ -25,7 +25,7 @@ func (r *Repository) AddTask(
 ) error {
 	t.Created = r.Clocker.Now()
 	t.Modified = r.Clocker.Now()
-	sql := `insert into tasks
+	sql := `insert into todoapp.tasks
 		(title, stat, created, modified)
 		values($1, $2, $3, $4) returning id;`
 	err := db.QueryRowxContext(
