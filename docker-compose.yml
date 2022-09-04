@@ -1,14 +1,39 @@
 version: "3.9"
 services:
-  app:
-    image: gotodo-air
+  todo-app:
+    image: gotodo-air:latest
+    container_name: todo-app
     build:
       args:
         - target=dev
     environment:
       TODO_ENV: dev
       PORT: 8080
-    volumes:
-      - .:/app
+      TODO_DB_HOST: todo-db
+      TODO_DB_PORT: 5432
+      TODO_DB_USER: todo
+      TODO_DB_PASSWORD: todo
+      TODO_DB_NAME: todo
     ports:
-      - "18080:8080"
+      - 18080:8080
+    volumes:
+      - type: bind
+        source: ./
+        target: /app
+  todo-db:
+    image: postgres:latest
+    container_name: todo-db
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - type: volume
+        source: todo-db-data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: _tools/postgres/init
+        target: /docker-entrypoint-initdb.d
+
+volumes:
+  todo-db-data:

@@ -1,16 +1,44 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"net/http"
+
+	"github.com/chmikata/go_todo_app/clock"
+	"github.com/chmikata/go_todo_app/config"
+	"github.com/chmikata/go_todo_app/handler"
+	"github.com/chmikata/go_todo_app/service"
+	"github.com/chmikata/go_todo_app/store"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator"
 )
 
-func NewMux() http.Handler {
-	mux := http.NewServeMux()
+func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), error) {
+	mux := chi.NewRouter()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		rMsg := fmt.Sprintf(`{"status": "ok", "path": "%s"}`, r.URL.Path[1:])
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		_, _ = w.Write([]byte(rMsg))
+		_, _ = w.Write([]byte(`{"status": "ok"}`))
 	})
-	return mux
+
+	v := validator.New()
+	db, cleanup, err := store.New(ctx, cfg)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	r := &store.Repository{Clocker: clock.RealClocker{}}
+	lt := &handler.ListTask{
+		Service: &service.ListTask{DB: db, Repo: r},
+	}
+	mux.Get("/tasks", lt.ServedHTTP)
+	at := &handler.AddTask{
+		Service:   &service.AddTask{DB: db, Repo: r},
+		Validator: v,
+	}
+	mux.Post("/tasks", at.ServedHTTP)
+	ru := &handler.RegisterUser{
+		Service:   &service.RegisterUser{DB: db, Repo: r},
+		Validator: v,
+	}
+	mux.Post("/register", ru.ServedHTTP)
+	return mux, cleanup, nil
 }
