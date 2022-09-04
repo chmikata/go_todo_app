@@ -83,7 +83,7 @@ func TestRegisterUser_RegisterUser(t *testing.T) {
 				t.Errorf("RegisterUser.RegisterUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			//passwordが固定化できないのでhack
+			// hack because password can not be fixed
 			if got != nil {
 				got.Password = tt.want.Password
 			}
