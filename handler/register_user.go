@@ -7,15 +7,17 @@ import (
 	"github.com/go-playground/validator"
 )
 
-type AddTask struct {
-	Service   AddTaskService
+type RegisterUser struct {
+	Service   RegisterUserService
 	Validator *validator.Validate
 }
 
-func (at *AddTask) ServedHTTP(w http.ResponseWriter, r *http.Request) {
+func (ru *RegisterUser) ServedHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var b struct {
-		Title string `json:"title" validate:"required"`
+		Name     string `json:"name" validate:"required"`
+		Password string `json:"password" validate:"required"`
+		Role     string `json:"role" validate:"required"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
@@ -25,14 +27,14 @@ func (at *AddTask) ServedHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := at.Validator.Struct(b); err != nil {
+	if err := ru.Validator.Struct(b); err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
 
-	t, err := at.Service.AddTask(ctx, b.Title)
+	u, err := ru.Service.RegisterUser(ctx, b.Name, b.Password, b.Role)
 	if err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
@@ -42,6 +44,6 @@ func (at *AddTask) ServedHTTP(w http.ResponseWriter, r *http.Request) {
 
 	rsp := struct {
 		ID int `json:"id"`
-	}{ID: int(t.ID)}
+	}{ID: int(u.ID)}
 	RespondJSON(ctx, w, rsp, http.StatusOK)
 }
