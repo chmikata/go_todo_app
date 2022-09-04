@@ -12,6 +12,8 @@ import (
 )
 
 func TestListTask(t *testing.T) {
+	t.Parallel()
+
 	type want struct {
 		status  int
 		rspFile string
@@ -20,7 +22,7 @@ func TestListTask(t *testing.T) {
 		tasks []*entity.Task
 		want  want
 	}{
-		"ok": {
+		"ok case": {
 			tasks: []*entity.Task{
 				{
 					ID:    1,
@@ -38,11 +40,18 @@ func TestListTask(t *testing.T) {
 				rspFile: "testdata/list_task/ok_rsp.json.golden",
 			},
 		},
-		"empty": {
+		"empty case": {
 			tasks: []*entity.Task{},
 			want: want{
 				status:  http.StatusOK,
 				rspFile: "testdata/list_task/empty_rsp.json.golden",
+			},
+		},
+		"error case": {
+			tasks: nil,
+			want: want{
+				status:  http.StatusInternalServerError,
+				rspFile: "testdata/list_task/bad_rsp.json.golden",
 			},
 		},
 	}

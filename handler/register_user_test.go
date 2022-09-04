@@ -14,7 +14,9 @@ import (
 	"github.com/go-playground/validator"
 )
 
-func TestAddTask(t *testing.T) {
+func TestRegisterUser_ServedHTTP(t *testing.T) {
+	t.Parallel()
+
 	type want struct {
 		status  int
 		rspFile string
@@ -23,18 +25,18 @@ func TestAddTask(t *testing.T) {
 		reqFile string
 		want    want
 	}{
-		"ok": {
-			reqFile: "testdata/add_task/ok_req.json.golden",
+		"ok case": {
+			reqFile: "testdata/register_user/ok_req.json.golden",
 			want: want{
 				status:  http.StatusOK,
-				rspFile: "testdata/add_task/ok_rsp.json.golden",
+				rspFile: "testdata/register_user/ok_rsp.json.golden",
 			},
 		},
-		"badrequest": {
-			reqFile: "testdata/add_task/bad_req.json.golden",
+		"badrequest case": {
+			reqFile: "testdata/register_user/bad_req.json.golden",
 			want: want{
 				status:  http.StatusBadRequest,
-				rspFile: "testdata/add_task/bad_rsp.json.golden",
+				rspFile: "testdata/register_user/bad_rsp.json.golden",
 			},
 		},
 	}
@@ -46,36 +48,36 @@ func TestAddTask(t *testing.T) {
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(
 				http.MethodPost,
-				"/tasks",
+				"/register",
 				bytes.NewReader(testutil.LoadFile(t, tt.reqFile)),
 			)
 
 			fc := clock.FixedClocker{}
-			moq := &AddTaskServiceMock{}
-			moq.AddTaskFunc = func(
-				ctx context.Context, title string,
-			) (*entity.Task, error) {
+			moq := &RegisterUserServiceMock{}
+			moq.RegisterUserFunc = func(
+				ctx context.Context, name, password, role string,
+			) (*entity.User, error) {
 				if tt.want.status == http.StatusOK {
-					return &entity.Task{
-						ID:       1,
-						Title:    "Implement a handler",
-						Stat:     entity.TaskStatusTodo,
+					return &entity.User{
+						ID:       10,
+						Name:     "john",
+						Password: "test",
+						Role:     "user",
 						Created:  fc.Now(),
 						Modified: fc.Now(),
 					}, nil
 				}
 				return nil, errors.New("error from mock")
 			}
-
-			at := AddTask{
+			ru := &RegisterUser{
 				Service:   moq,
 				Validator: validator.New(),
 			}
-			at.ServedHTTP(w, r)
+			ru.ServedHTTP(w, r)
 
-			resp := w.Result()
+			rsp := w.Result()
 			testutil.AssertResponse(
-				t, resp, tt.want.status, testutil.LoadFile(t, tt.want.rspFile),
+				t, rsp, tt.want.status, testutil.LoadFile(t, tt.want.rspFile),
 			)
 		})
 	}
