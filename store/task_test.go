@@ -31,15 +31,13 @@ func TestRepository_ListTasks(t *testing.T) {
 		db  Queryer
 	}
 	fc := clock.FixedClocker{}
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		fields  fields
 		args    args
 		want    entity.Tasks
 		wantErr bool
 	}{
-		{
-			name:   "Dummy DB test",
+		"ok case": {
 			fields: fields{Clocker: fc},
 			args: args{
 				ctx: ctx,
@@ -66,8 +64,9 @@ func TestRepository_ListTasks(t *testing.T) {
 	if _, err := tx.ExecContext(ctx, "delete from todoapp.tasks;"); err != nil {
 		t.Errorf("failed to initialize todoapp.tasks: %v", err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for n, tt := range tests {
+		tt := tt
+		t.Run(n, func(t *testing.T) {
 			rows, err := tx.QueryContext(ctx,
 				`insert into todoapp.tasks (title, stat, created, modified) values
 				($1, $2, $3, $4),($5, $6, $7, $8), ($9, $10, $11, $12) returning id;`,
@@ -125,14 +124,13 @@ func TestRepository_AddTask(t *testing.T) {
 		db  Execer
 		t   *entity.Task
 	}
-	tests := []struct {
+	tests := map[string]struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
 	}{
-		{
-			name:   "test1",
+		"ok case": {
 			fields: fields{Clocker: fc},
 			args: args{
 				ctx: ctx,
@@ -147,8 +145,9 @@ func TestRepository_AddTask(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for n, tt := range tests {
+		tt := tt
+		t.Run(n, func(t *testing.T) {
 			mock.ExpectQuery(
 				regexp.QuoteMeta(`insert into todoapp.tasks (title, stat, created, modified)
 				values($1, $2, $3, $4) returning id;`),
