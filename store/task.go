@@ -7,14 +7,15 @@ import (
 )
 
 func (r *Repository) ListTasks(
-	ctx context.Context, db Queryer,
+	ctx context.Context, db Queryer, id entity.UserId,
 ) (entity.Tasks, error) {
 	tasks := entity.Tasks{}
 	sql := `select
-		id, title,
+		id, user_id, title,
 		stat, created, modified
-		from todoapp.tasks;`
-	if err := db.SelectContext(ctx, &tasks, sql); err != nil {
+		from todoapp.tasks
+		where user_id = $1;`
+	if err := db.SelectContext(ctx, &tasks, sql, id); err != nil {
 		return nil, err
 	}
 	return tasks, nil
@@ -23,14 +24,12 @@ func (r *Repository) ListTasks(
 func (r *Repository) AddTask(
 	ctx context.Context, db Execer, t *entity.Task,
 ) error {
-	t.Created = r.Clocker.Now()
-	t.Modified = r.Clocker.Now()
 	sql := `insert into todoapp.tasks
-		(title, stat, created, modified)
-		values($1, $2, $3, $4) returning id;`
+		(user_id, title, stat, created, modified)
+		values($1, $2, $3, $4, $5) returning id;`
 	err := db.QueryRowxContext(
-		ctx, sql, t.Title, t.Stat,
-		t.Created, t.Modified,
+		ctx, sql, t.UserId, t.Title, t.Stat,
+		r.Clocker.Now(), r.Clocker.Now(),
 	).Scan(&t.ID)
 	if err != nil {
 		return err

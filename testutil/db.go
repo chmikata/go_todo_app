@@ -13,7 +13,7 @@ import (
 func OpenDBForTest(t *testing.T) *sqlx.DB {
 	t.Helper()
 
-	port := 5432
+	port := 55432
 	if _, defined := os.LookupEnv("CI"); defined {
 		port = 5432
 	}
