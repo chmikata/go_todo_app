@@ -14,7 +14,7 @@ import (
 	"github.com/go-playground/validator"
 )
 
-func TestRegisterUser_ServedHTTP(t *testing.T) {
+func TestRegisterUser(t *testing.T) {
 	t.Parallel()
 
 	type want struct {

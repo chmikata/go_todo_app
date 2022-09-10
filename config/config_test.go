@@ -20,4 +20,8 @@ func TestNew(t *testing.T) {
 	if got.Env != wantEnv {
 		t.Errorf("want %s, but %s", wantEnv, got.Env)
 	}
+	wantRedisPort := 36379
+	if got.RedisPort != wantRedisPort {
+		t.Errorf("want %d, but %d", wantRedisPort, got.RedisPort)
+	}
 }
