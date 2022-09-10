@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -10,96 +9,91 @@ import (
 	"github.com/chmikata/go_todo_app/clock"
 	"github.com/chmikata/go_todo_app/entity"
 	"github.com/chmikata/go_todo_app/testutil"
+	"github.com/chmikata/go_todo_app/testutil/fixture"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jmoiron/sqlx"
 )
+
+func prepareUser(ctx context.Context, t *testing.T, db Execer) entity.UserId {
+	t.Helper()
+
+	u := fixture.User(nil)
+	err := db.QueryRowxContext(ctx,
+		`insert into todoapp.users(
+		name, password, role, created, modified
+		) values ($1, $2, $3, $4, $5) returning id;`,
+		u.Name, u.Password, u.Role, u.Created, u.Modified,
+	).Scan(&u.ID)
+	if err != nil {
+		t.Fatalf("insert user: %v", err)
+	}
+	return entity.UserId(u.ID)
+}
+
+func prepareTasks(ctx context.Context, t *testing.T, db Execer) (entity.UserId, entity.Tasks) {
+	t.Helper()
+
+	userId := prepareUser(ctx, t, db)
+	oterUserId := prepareUser(ctx, t, db)
+	c := clock.FixedClocker{}
+	wants := entity.Tasks{
+		{
+			UserId: userId,
+			Title:  "want task 1", Stat: "todo",
+			Created: c.Now(), Modified: c.Now(),
+		},
+		{
+			UserId: userId,
+			Title:  "want task 2", Stat: "done",
+			Created: c.Now(), Modified: c.Now(),
+		},
+	}
+	tasks := entity.Tasks{
+		wants[0],
+		{
+			UserId: oterUserId,
+			Title:  "not want task", Stat: "doto",
+			Created: c.Now(), Modified: c.Now(),
+		},
+		wants[1],
+	}
+	rows, err := db.QueryxContext(ctx,
+		`insert into todoapp.tasks
+		(user_id, title, stat, created, modified) values
+		($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10), ($11, $12, $13, $14, $15) returning id;`,
+		tasks[0].UserId, tasks[0].Title, tasks[0].Stat, tasks[0].Created, tasks[0].Modified,
+		tasks[1].UserId, tasks[1].Title, tasks[1].Stat, tasks[1].Created, tasks[1].Modified,
+		tasks[2].UserId, tasks[2].Title, tasks[2].Stat, tasks[2].Created, tasks[2].Modified,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; rows.Next(); i++ {
+		if err := rows.Scan(&tasks[i].ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return userId, wants
+}
 
 func TestRepository_ListTasks(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	tx, err := testutil.OpenDBForTest(t).BeginTxx(ctx, nil)
+	t.Cleanup(func() { _ = tx.Rollback() })
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = tx.Rollback() })
+	wantUserId, wants := prepareTasks(ctx, t, tx)
 
-	type fields struct {
-		Clocker clock.Clocker
+	sut := &Repository{}
+	gots, err := sut.ListTasks(ctx, tx, wantUserId)
+	if err != nil {
+		t.Fatalf("unexected error: %v", err)
 	}
-	type args struct {
-		ctx context.Context
-		db  Queryer
-	}
-	fc := clock.FixedClocker{}
-	tests := map[string]struct {
-		fields  fields
-		args    args
-		want    entity.Tasks
-		wantErr bool
-	}{
-		"ok case": {
-			fields: fields{Clocker: fc},
-			args: args{
-				ctx: ctx,
-				db:  tx,
-			},
-			want: entity.Tasks{
-				&entity.Task{
-					Title: "task1", Stat: "todo",
-					Created: fc.Now(), Modified: fc.Now(),
-				},
-				&entity.Task{
-					Title: "task2", Stat: "todo",
-					Created: fc.Now(), Modified: fc.Now(),
-				},
-				&entity.Task{
-					Title: "task3", Stat: "done",
-					Created: fc.Now(), Modified: fc.Now(),
-				},
-			},
-			wantErr: false,
-		},
-	}
-	// initialize test case. test record delete
-	if _, err := tx.ExecContext(ctx, "delete from todoapp.tasks;"); err != nil {
-		t.Errorf("failed to initialize todoapp.tasks: %v", err)
-	}
-	for n, tt := range tests {
-		tt := tt
-		t.Run(n, func(t *testing.T) {
-			rows, err := tx.QueryContext(ctx,
-				`insert into todoapp.tasks (title, stat, created, modified) values
-				($1, $2, $3, $4),($5, $6, $7, $8), ($9, $10, $11, $12) returning id;`,
-				tt.want[0].Title, tt.want[0].Stat, tt.want[0].Created, tt.want[0].Modified,
-				tt.want[1].Title, tt.want[1].Stat, tt.want[1].Created, tt.want[1].Modified,
-				tt.want[2].Title, tt.want[2].Stat, tt.want[2].Created, tt.want[2].Modified,
-			)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for i := 0; rows.Next(); i++ {
-				if err := rows.Scan(&tt.want[i].ID); err != nil {
-					t.Fatal(err)
-				}
-			}
-			r := &Repository{
-				Clocker: tt.fields.Clocker,
-			}
-			got, err := r.ListTasks(tt.args.ctx, tt.args.db)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Repository.ListTasks() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			// Eliminate discrepancies with PostgreSQL timestamp
-			for _, g := range got {
-				g.Created = g.Created.UTC()
-				g.Modified = g.Modified.UTC()
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Repository.ListTasks() = %v, want %v", got[0], tt.want[0])
-			}
-		})
+	if d := cmp.Diff(gots, wants); len(d) != 0 {
+		t.Errorf("differs: (-got + want)\n%s", d)
 	}
 }
 
@@ -136,6 +130,7 @@ func TestRepository_AddTask(t *testing.T) {
 				ctx: ctx,
 				db:  xdb,
 				t: &entity.Task{
+					UserId:   10,
 					Title:    "ok test",
 					Stat:     "todo",
 					Created:  fc.Now(),
@@ -148,10 +143,12 @@ func TestRepository_AddTask(t *testing.T) {
 	for n, tt := range tests {
 		tt := tt
 		t.Run(n, func(t *testing.T) {
+			t.Parallel()
+
 			mock.ExpectQuery(
-				regexp.QuoteMeta(`insert into todoapp.tasks (title, stat, created, modified)
-				values($1, $2, $3, $4) returning id;`),
-			).WithArgs(tt.args.t.Title, tt.args.t.Stat, tt.args.t.Created, tt.args.t.Modified).
+				regexp.QuoteMeta(`insert into todoapp.tasks (user_id, title, stat, created, modified)
+				values($1, $2, $3, $4, $5) returning id;`),
+			).WithArgs(tt.args.t.UserId, tt.args.t.Title, tt.args.t.Stat, tt.args.t.Created, tt.args.t.Modified).
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(wantID))
 			r := &Repository{
 				Clocker: tt.fields.Clocker,

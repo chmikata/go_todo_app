@@ -24,10 +24,10 @@ test: ## Execute tests
 	go test -race -shuffle=on ./...
 
 migrate: ## Migration DB
-	psqldef -U todo -W todo -h localhost -p 5432 todo -f ./_tools/postgres/schema.sql
+	psqldef -U todo -W todo -h localhost -p 55432 todo -f ./_tools/postgres/schema.sql
 
 dry-migrate: ## Dry-run Migration DB
-	psqldef -U todo -W todo -h localhost -p 5432 todo --dry-run -f ./_tools/postgres/schema.sql
+	psqldef -U todo -W todo -h localhost -p 55432 todo --dry-run -f ./_tools/postgres/schema.sql
 
 generate: ## Generate codes
 	go generate ./...

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/chmikata/go_todo_app/auth"
 	"github.com/chmikata/go_todo_app/clock"
 	"github.com/chmikata/go_todo_app/entity"
 	"github.com/chmikata/go_todo_app/store"
@@ -29,10 +30,11 @@ func TestListTask_ListTasks(t *testing.T) {
 		wantErr bool
 	}{
 		"ok case1": {
-			args: args{context.Background()},
+			args: args{auth.SetUserID(context.Background(), 10)},
 			want: entity.Tasks{
 				&entity.Task{
 					ID:       10,
+					UserId:   10,
 					Title:    "task1",
 					Stat:     entity.TaskStatusTodo,
 					Created:  fc.Now(),
@@ -40,6 +42,7 @@ func TestListTask_ListTasks(t *testing.T) {
 				},
 				&entity.Task{
 					ID:       11,
+					UserId:   10,
 					Title:    "task2",
 					Stat:     entity.TaskStatusTodo,
 					Created:  fc.Now(),
@@ -47,6 +50,7 @@ func TestListTask_ListTasks(t *testing.T) {
 				},
 				&entity.Task{
 					ID:       12,
+					UserId:   10,
 					Title:    "task3",
 					Stat:     entity.TaskStatusTodo,
 					Created:  fc.Now(),
@@ -56,7 +60,7 @@ func TestListTask_ListTasks(t *testing.T) {
 			wantErr: false,
 		},
 		"ok case2": {
-			args:    args{context.Background()},
+			args:    args{auth.SetUserID(context.Background(), 10)},
 			want:    entity.Tasks{},
 			wantErr: false,
 		},
@@ -71,7 +75,7 @@ func TestListTask_ListTasks(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			moq := &TaskListerMock{}
 			moq.ListTasksFunc = func(
-				ctx context.Context, db store.Queryer,
+				ctx context.Context, db store.Queryer, id entity.UserId,
 			) (entity.Tasks, error) {
 				if !tt.wantErr {
 					return tt.want, nil

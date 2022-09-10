@@ -14,7 +14,7 @@ services:
       TODO_DB_USER: todo
       TODO_DB_PASSWORD: todo
       TODO_DB_NAME: todo
-      TODO_REDIS_HOST: todoo-redis
+      TODO_REDIS_HOST: todo-redis
       TODO_REDIS_PORT: 6379
     ports:
       - 18080:8080
