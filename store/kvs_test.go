@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -21,8 +22,12 @@ func TestNewKvs(t *testing.T) {
 		ctx context.Context
 		cfg *config.Config
 	}
+	port := 36379
+	if _, defined := os.LookupEnv("CI"); defined {
+		port = 6379
+	}
 	cli := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%d", "localhost", 36379)})
+		Addr: fmt.Sprintf("%s:%d", "localhost", port)})
 	cli.Ping(context.Background())
 	tests := map[string]struct {
 		args    args
