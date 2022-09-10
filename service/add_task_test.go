@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/chmikata/go_todo_app/auth"
 	"github.com/chmikata/go_todo_app/clock"
 	"github.com/chmikata/go_todo_app/entity"
 	"github.com/chmikata/go_todo_app/store"
@@ -30,9 +31,10 @@ func TestAddTask_AddTask(t *testing.T) {
 		wantErr bool
 	}{
 		"ok case": {
-			args: args{context.Background(), "test title"},
+			args: args{ctx: auth.SetUserID(context.Background(), 10), title: "test title"},
 			want: &entity.Task{
 				ID:       10,
+				UserId:   10,
 				Title:    "test title",
 				Stat:     entity.TaskStatusTodo,
 				Created:  clock.FixedClocker{}.Now(),
@@ -49,6 +51,8 @@ func TestAddTask_AddTask(t *testing.T) {
 	for n, tt := range tests {
 		tt := tt
 		t.Run(n, func(t *testing.T) {
+			t.Parallel()
+
 			moq := &TaskAdderMock{}
 			moq.AddTaskFunc = func(
 				ctx context.Context, db store.Execer, t *entity.Task,
@@ -56,6 +60,7 @@ func TestAddTask_AddTask(t *testing.T) {
 				if !tt.wantErr {
 					fc := clock.FixedClocker{}
 					t.ID = tt.want.ID
+					t.UserId = tt.want.UserId
 					t.Created = fc.Now()
 					t.Modified = fc.Now()
 					return nil

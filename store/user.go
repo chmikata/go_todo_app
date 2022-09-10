@@ -12,14 +12,12 @@ import (
 func (r *Repository) RegisterUser(
 	ctx context.Context, db Execer, u *entity.User,
 ) error {
-	u.Created = r.Clocker.Now()
-	u.Modified = r.Clocker.Now()
 	sql := `insert into todoapp.users(
 		name, password, role, created, modified
 	) values ($1, $2, $3, $4, $5) returning id;`
 	err := db.QueryRowxContext(
 		ctx, sql, u.Name, u.Password,
-		u.Role, u.Created, u.Modified,
+		u.Role, r.Clocker.Now(), r.Clocker.Now(),
 	).Scan(&u.ID)
 	if err != nil {
 		var pgErr *pq.Error
@@ -29,4 +27,17 @@ func (r *Repository) RegisterUser(
 		return err
 	}
 	return nil
+}
+
+func (r *Repository) GetUser(
+	ctx context.Context, db Queryer, name string,
+) (*entity.User, error) {
+	u := &entity.User{}
+	sql := `select
+	id, name, password, role, created, modified
+		from todoapp.users where name = $1`
+	if err := db.GetContext(ctx, u, sql, name); err != nil {
+		return nil, err
+	}
+	return u, nil
 }
