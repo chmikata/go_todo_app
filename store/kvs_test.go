@@ -39,7 +39,7 @@ func TestNewKvs(t *testing.T) {
 				ctx: context.Background(),
 				cfg: &config.Config{
 					RedisHost: "localhost",
-					RedisPort: 36379,
+					RedisPort: port,
 				},
 			},
 			want:    nil,
