@@ -52,7 +52,7 @@ func TestRegisterUser_RegisterUser(t *testing.T) {
 				ctx:      context.Background(),
 				name:     "user1",
 				password: "user1",
-				role:     "user",
+				role:     "admin",
 			},
 			want:    nil,
 			wantErr: true,
